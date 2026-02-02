@@ -1,6 +1,6 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Laminar_Bracket", "Laminar_Bracket\Laminar_Bracket.csproj", "{5768AD6D-8F4E-4F6E-9EF9-24A3465583A2}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "LaminarBracket", "LaminarBracket\LaminarBracket.csproj", "{5768AD6D-8F4E-4F6E-9EF9-24A3465583A2}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
