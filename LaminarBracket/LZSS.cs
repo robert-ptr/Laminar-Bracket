@@ -1,194 +1,184 @@
-using System.Runtime.InteropServices.Marshalling;
+using System;
+using System.Collections.Generic;
+using System.IO;
 
-public struct Token
+public class LzssCompressor : ICompressor
 {
-    public int Position;
-    public int Length;
-    public char C;
+    private readonly int maxWindowSize;
+    private readonly int maxLookahead;
+    private readonly bool lazyMatching;
 
-    public Token(int position, int length, char c)
-    {
-        this.Position = position;
-        this.Length = length;
-        this.C = c;
-    }
-    
-    public override string ToString()
-    {
-        return $"({Position}, {Length}, '{C}')";
-    }
-};
+    public string Name => $"LZSS (W={maxWindowSize}, L={maxLookahead}, Lazy={lazyMatching})";
 
-public class LzssCompressor
-{
-    private const int MaxWindowSize = 4096;
-    private const int MaxLookahead = 255;
-    private BitWriter bw;
-    private BitReader br;
-
-    public LzssCompressor(Stream output)
+    public LzssCompressor(int maxWindowSize = 4096, int maxLookahead = 255, bool lazyMatching = false)
     {
-        bw = new BitWriter(output);
-        br = new BitReader(output);
+        this.maxWindowSize = maxWindowSize;
+        this.maxLookahead = maxLookahead;
+        this.lazyMatching = lazyMatching;
     }
 
-    private void WriteByte(byte b)
+    public byte[] Compress(byte[] data)
+    {
+        using (var ms = new MemoryStream())
+        {
+            var writer = new BinaryWriter(ms);
+            writer.Write(data.Length);
+            
+            var bw = new BitWriter(ms);
+            int position = 0;
+
+            ReadOnlySpan<byte> span = data.AsSpan();
+
+            while (position < span.Length)
+            {
+                var match = FindMatch(span, position);
+
+                if (match.Length >= 3)
+                {
+                    bool useLiteral = false;
+
+                    if (lazyMatching && position + 1 < span.Length)
+                    {
+                        var matchNext = FindMatch(span, position + 1);
+                        
+                        if (matchNext.Length > match.Length + 1)
+                        {
+                            useLiteral = true;
+                        }
+                    }
+
+                    if (useLiteral)
+                    {
+                         bw.WriteBit(0); 
+                         WriteByte(bw, span[position]);
+                         position++;
+                    }
+                    else
+                    {
+                        int windowStart = Math.Max(0, position - maxWindowSize);
+                        int windowLength = position - windowStart;
+                        int distance = windowLength - match.Start;
+                        int length = match.Length;
+
+                        bw.WriteBit(1); 
+                        WriteByte(bw, (byte)(distance >> 8));
+                        WriteByte(bw, (byte)(distance & 0xFF));
+                        WriteByte(bw, (byte)length);
+
+                        position += length;
+                    }
+                }
+                else
+                {
+                    bw.WriteBit(0); 
+                    WriteByte(bw, span[position]);
+                    position++;
+                }
+            }
+            
+            bw.Flush();
+            return ms.ToArray();
+        }
+    }
+
+    private (int Start, int Length) FindMatch(ReadOnlySpan<byte> data, int position)
+    {
+        var windowStart = Math.Max(0, position -maxWindowSize);
+        var windowLength = position - windowStart;
+        
+        var window = data.Slice(windowStart, windowLength);
+        var lookahead = data.Slice(position);
+        
+        return FindLongestMatch(window, lookahead);
+    }
+
+    public byte[] Decompress(byte[] data)
+    {
+        using (var input = new MemoryStream(data))
+        using (var reader = new BinaryReader(input))
+        using (var output = new MemoryStream())
+        {
+            int originalLength = reader.ReadInt32();
+            var br = new BitReader(input);
+            
+            while (output.Position < originalLength)
+            {
+                int bit = br.ReadBit();
+                if (bit == -1) break; 
+
+                if (bit == 0) // Literal
+                {
+                    byte b = ReadByte(br);
+                    output.WriteByte(b);
+                }
+                else // Pair
+                {
+                    int dHigh = ReadByte(br);
+                    int dLow = ReadByte(br);
+                    int distance = (dHigh << 8) | dLow;
+                    int length = ReadByte(br);
+                    
+                    long currentPos = output.Position;
+                    long copyStart = currentPos - distance;
+                    
+                    if (copyStart < 0) throw new Exception("Corrupt file: Invalid distance");
+
+                    byte[] buffer = output.GetBuffer();
+                    
+                    for (int i = 0; i < length; i++)
+                    {
+                        output.WriteByte(buffer[copyStart + i]);
+                    }
+                }
+            }
+            return output.ToArray();
+        }
+    }
+
+    private void WriteByte(BitWriter bw, byte b)
     {
         for (int i = 7; i >= 0; i--)
         {
             bw.WriteBit((b >> i) & 1);
         }
     }
-    
-    private void WriteChar(char c) // writes a simple char
-    {
-        bw.WriteBit(0);
-        WriteByte((byte)c);
-    }
 
-    private byte ReadByte()
+    private byte ReadByte(BitReader br)
     {
-        byte buffer = 0;
-        int bitsRead = 0;
-
-        while (bitsRead < 8)
+        byte b = 0;
+        for (int i = 0; i < 8; i++)
         {
-            int bit =  br.ReadBit();
-
-            if (bit == -1)
-                break;
-            
-            buffer = (byte)((buffer << 1) | bit);
-            bitsRead++;
+            int bit = br.ReadBit();
+            if (bit == -1) throw new EndOfStreamException();
+            b = (byte)((b << 1) | bit);
         }
-
-        return buffer;
+        return b;
     }
 
-    private (int Start, int Length) FindLongestMatch(ReadOnlySpan<char> window, ReadOnlySpan<char> lookahead)
+    private (int Start, int Length) FindLongestMatch(ReadOnlySpan<byte> window, ReadOnlySpan<byte> lookahead)
     {
-        var bestLen = 0;
-        var bestIndex = 0;
-        var limit = Math.Min(lookahead.Length, MaxLookahead);
-        
+        int bestLen = 0;
+        int bestIndex = 0;
+        int limit = Math.Min(lookahead.Length, maxLookahead);
+
         for (int i = 0; i < window.Length; i++)
         {
-            if (window[i] != lookahead[0])
-                continue;
-
-            var len = 1;
+            if (window[i] != lookahead[0]) continue;
             
-            while (len < limit && 
-                   (i + len) < window.Length &&
-                   window[i + len] == lookahead[len])
+            int len = 1;
+            while (len < limit && (i + len) < window.Length && window[i + len] == lookahead[len])
             {
                 len++;
             }
-
+            
             if (len > bestLen)
             {
                 bestLen = len;
-                bestIndex = i;
-
-                if (bestLen == limit)
-                    break;
+                bestIndex = i; 
+                if (bestLen == limit) break;
             }
         }
         
         return (bestIndex, bestLen);
-    }
-    
-    public void Compress(String message)
-    {
-        var tokens = new List<Token>();
-        int position = 0;
-        
-        ReadOnlySpan<char> data = message.AsSpan();
-
-        while (position < data.Length)
-        {
-            var windowStart = Math.Max(0, position - MaxWindowSize);
-            var windowLength = position - windowStart;
-            
-            ReadOnlySpan<char> window = data.Slice(windowStart, windowLength);
-            ReadOnlySpan<char> lookahead = data.Slice(position);
-            
-            var match = FindLongestMatch(window, lookahead);
-            int d, l;
-            char c;
-
-            if (match.Length > 3)
-            {
-                d = window.Length - match.Start;
-                l = match.Length;
-
-                if (position + l < data.Length)
-                {
-                    c = data[position + l];
-                }
-                else
-                {
-                    c = '\0';
-                }
-            }
-            else
-            {
-                d = 0;
-                l = 0;
-                c = data[position];
-            }
-
-            if (d != 0)
-            {
-                bw.WriteBit(1);
-                WriteByte((byte)(d >> 8));
-                WriteByte((byte)(d & 0xFF));
-                WriteByte((byte)l);
-                
-                position += l;
-            }
-            else
-            {
-                WriteChar(c);
-
-                position++;
-            }
-        }
-        
-        bw.Flush();
-    }
-
-    public String Decompress()
-    {
-        var sb = new System.Text.StringBuilder();
-
-        while (true)
-        {
-            int bit = br.ReadBit();
-
-            if (bit == -1)
-                break;
-
-            if (bit == 0)
-            {
-                sb.Append((char)ReadByte());
-            }
-            else
-            {
-                int d = ReadByte() << 8 | ReadByte();
-                int l = ReadByte();
-                
-                int startIndex = sb.Length - d;
-                    
-                if (startIndex < 0) throw new Exception("Corrupt file: Invalid distance");
-                
-                for (int i = 0; i < l; i++)
-                {
-                    sb.Append(sb[startIndex + i]);
-                }
-            }
-        }
-        
-        return sb.ToString();
     }
 }
