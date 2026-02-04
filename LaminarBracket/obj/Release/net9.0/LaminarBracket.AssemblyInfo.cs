@@ -14,7 +14,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("LaminarBracket")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Release")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+abb092933e4837a8c35cba6483dd45afdbb3395d")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+dca087d2e76ef2a6148f6837bc2aa8f300c0e39d")]
 [assembly: System.Reflection.AssemblyProductAttribute("LaminarBracket")]
 [assembly: System.Reflection.AssemblyTitleAttribute("LaminarBracket")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]
