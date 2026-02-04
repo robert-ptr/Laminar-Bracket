@@ -20,81 +20,85 @@ public class Program
 
     public static void Main()
     {
-        Console.WriteLine("Starting Benchmark.");
-        
-        var sb = new StringBuilder();
-        sb.AppendLine("Benchmark Results");
-        sb.AppendLine();
-        sb.AppendLine("| Dataset | Algorithm | Original Size | Compressed Size | Ratio (%) | Time (ms) | Speed (MB/s) |");
-        sb.AppendLine("|---|---|---|---|---|---|---|");
+        Console.WriteLine("Generating Anomaly Dataset.");
+        AnomalyDatasetGenerator.Run();
+        Console.WriteLine("Anomaly Dataset Generation Complete.");
 
-        Console.WriteLine("\n| Dataset | Algorithm | Original Size | Compressed Size | Ratio (%) | Time (ms) | Speed (MB/s) |");
-        Console.WriteLine("|---|---|---|---|---|---|---|");
+        //Console.WriteLine("Starting Benchmark.");
 
-        var pipelines = new List<ICompressor>();
+        //var sb = new StringBuilder();
+        //sb.AppendLine("Benchmark Results");
+        //sb.AppendLine();
+        //sb.AppendLine("| Dataset | Algorithm | Original Size | Compressed Size | Ratio (%) | Time (ms) | Speed (MB/s) |");
+        //sb.AppendLine("|---|---|---|---|---|---|---|");
 
-        // Base case
-        pipelines.Add(new HuffmanCompressor());
-        pipelines.Add(new ArithmeticCompressor());
+        //Console.WriteLine("\n| Dataset | Algorithm | Original Size | Compressed Size | Ratio (%) | Time (ms) | Speed (MB/s) |");
+        //Console.WriteLine("|---|---|---|---|---|---|---|");
 
-        // LZSS(Greedy)
-        // 8KB
-        pipelines.Add(new PipelineCompressor(new LzssCompressor(8192, 255, lazyMatching: false), new HuffmanCompressor()));
-        pipelines.Add(new PipelineCompressor(new LzssCompressor(8192, 255, lazyMatching: false), new ArithmeticCompressor()));
-        pipelines.Add(new PipelineCompressor(new LzssCompressor(8192, 255, lazyMatching: false)));
-        // 64KB
-        pipelines.Add(new PipelineCompressor(new LzssCompressor(65535, 255, lazyMatching: false), new HuffmanCompressor()));
-        pipelines.Add(new PipelineCompressor(new LzssCompressor(65535, 255, lazyMatching: false), new ArithmeticCompressor()));
-        pipelines.Add(new PipelineCompressor(new LzssCompressor(65535, 255, lazyMatching: false)));
-        // LZSS (Lazy)
-        // 8KB
-        pipelines.Add(new PipelineCompressor(new LzssCompressor(8192, 255, lazyMatching: true), new HuffmanCompressor()));
-        pipelines.Add(new PipelineCompressor(new LzssCompressor(8192, 255, lazyMatching: true), new ArithmeticCompressor()));
-        pipelines.Add(new PipelineCompressor(new LzssCompressor(8192, 255, lazyMatching: true)));
-        // 64KB
-        pipelines.Add(new PipelineCompressor(new LzssCompressor(65535, 255, lazyMatching: true), new HuffmanCompressor()));
-        pipelines.Add(new PipelineCompressor(new LzssCompressor(65535, 255, lazyMatching: true), new ArithmeticCompressor()));
-        pipelines.Add(new PipelineCompressor(new LzssCompressor(65535, 255, lazyMatching: true)));
+        //var pipelines = new List<ICompressor>();
 
-        // BWT
-        pipelines.Add(new PipelineCompressor(new BurrowsWheeler(), new HuffmanCompressor()));
-        pipelines.Add(new PipelineCompressor(new BurrowsWheeler(), new ArithmeticCompressor()));
+        //// Base case
+        //pipelines.Add(new HuffmanCompressor());
+        //pipelines.Add(new ArithmeticCompressor());
 
-        foreach (var filename in DatasetFiles)
-        {
-            try 
-            {
-                string fullPath = Path.Combine(DataRoot, filename);
-                if (!File.Exists(fullPath)) continue;
+        //// LZSS(Greedy)
+        //// 8KB
+        //pipelines.Add(new PipelineCompressor(new LzssCompressor(8192, 255, lazyMatching: false), new HuffmanCompressor()));
+        //pipelines.Add(new PipelineCompressor(new LzssCompressor(8192, 255, lazyMatching: false), new ArithmeticCompressor()));
+        //pipelines.Add(new PipelineCompressor(new LzssCompressor(8192, 255, lazyMatching: false)));
+        //// 64KB
+        //pipelines.Add(new PipelineCompressor(new LzssCompressor(65535, 255, lazyMatching: false), new HuffmanCompressor()));
+        //pipelines.Add(new PipelineCompressor(new LzssCompressor(65535, 255, lazyMatching: false), new ArithmeticCompressor()));
+        //pipelines.Add(new PipelineCompressor(new LzssCompressor(65535, 255, lazyMatching: false)));
+        //// LZSS (Lazy)
+        //// 8KB
+        //pipelines.Add(new PipelineCompressor(new LzssCompressor(8192, 255, lazyMatching: true), new HuffmanCompressor()));
+        //pipelines.Add(new PipelineCompressor(new LzssCompressor(8192, 255, lazyMatching: true), new ArithmeticCompressor()));
+        //pipelines.Add(new PipelineCompressor(new LzssCompressor(8192, 255, lazyMatching: true)));
+        //// 64KB
+        //pipelines.Add(new PipelineCompressor(new LzssCompressor(65535, 255, lazyMatching: true), new HuffmanCompressor()));
+        //pipelines.Add(new PipelineCompressor(new LzssCompressor(65535, 255, lazyMatching: true), new ArithmeticCompressor()));
+        //pipelines.Add(new PipelineCompressor(new LzssCompressor(65535, 255, lazyMatching: true)));
 
-                Console.WriteLine($"Loading {filename}..."); 
-                byte[] originalData = LoadData(fullPath);
-                string datasetName = filename;
+        //// BWT
+        //pipelines.Add(new PipelineCompressor(new BurrowsWheeler(), new HuffmanCompressor()));
+        //pipelines.Add(new PipelineCompressor(new BurrowsWheeler(), new ArithmeticCompressor()));
 
-                foreach (var compressor in pipelines)
-                {
-                    try
-                    {
-                        var resultLine = RunBenchmark(datasetName, compressor, originalData);
-                        Console.WriteLine(resultLine);
-                        sb.AppendLine(resultLine);
-                    }
-                    catch (Exception ex)
-                    {
-                        string err = $"| {datasetName} | {compressor.Name} | {originalData.Length} | *ERROR* | - | - | - |";
-                        Console.WriteLine(err);
-                        sb.AppendLine(err);
-                    }
-                }
-            }
-            catch (Exception)
-            {
-            }
-        }
+        //foreach (var filename in DatasetFiles)
+        //{
+        //    try
+        //    {
+        //        string fullPath = Path.Combine(DataRoot, filename);
+        //        if (!File.Exists(fullPath)) continue;
 
-        string outputFile = "benchmark_results.md";
-        File.WriteAllText(outputFile, sb.ToString());
-        Console.WriteLine($"\nResults saved to {outputFile}");
+        //        Console.WriteLine($"Loading {filename}...");
+        //        byte[] originalData = LoadData(fullPath);
+        //        string datasetName = filename;
+
+        //        foreach (var compressor in pipelines)
+        //        {
+        //            try
+        //            {
+        //                var resultLine = RunBenchmark(datasetName, compressor, originalData);
+        //                Console.WriteLine(resultLine);
+        //                sb.AppendLine(resultLine);
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                string err = $"| {datasetName} | {compressor.Name} | {originalData.Length} | *ERROR* | - | - | - |";
+        //                Console.WriteLine(err);
+        //                sb.AppendLine(err);
+        //            }
+        //        }
+        //    }
+        //    catch (Exception)
+        //    {
+        //    }
+        //}
+
+        //string outputFile = "benchmark_results.md";
+        //File.WriteAllText(outputFile, sb.ToString());
+        //Console.WriteLine($"\nResults saved to {outputFile}");
     }
 
     private static byte[] LoadData(string path)

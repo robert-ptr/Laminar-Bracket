@@ -1,0 +1,15 @@
+C:\Users\pasca\Facultate\Laminar-Bracket\LaminarBracket\obj\Debug\net9.0\LaminarBracket.GeneratedMSBuildEditorConfig.editorconfig
+C:\Users\pasca\Facultate\Laminar-Bracket\LaminarBracket\obj\Debug\net9.0\LaminarBracket.AssemblyInfoInputs.cache
+C:\Users\pasca\Facultate\Laminar-Bracket\LaminarBracket\obj\Debug\net9.0\LaminarBracket.AssemblyInfo.cs
+C:\Users\pasca\Facultate\Laminar-Bracket\LaminarBracket\obj\Debug\net9.0\LaminarBracket.csproj.CoreCompileInputs.cache
+C:\Users\pasca\Facultate\Laminar-Bracket\LaminarBracket\obj\Debug\net9.0\LaminarBracket.sourcelink.json
+C:\Users\pasca\Facultate\Laminar-Bracket\LaminarBracket\bin\Debug\net9.0\LaminarBracket.exe
+C:\Users\pasca\Facultate\Laminar-Bracket\LaminarBracket\bin\Debug\net9.0\LaminarBracket.deps.json
+C:\Users\pasca\Facultate\Laminar-Bracket\LaminarBracket\bin\Debug\net9.0\LaminarBracket.runtimeconfig.json
+C:\Users\pasca\Facultate\Laminar-Bracket\LaminarBracket\bin\Debug\net9.0\LaminarBracket.dll
+C:\Users\pasca\Facultate\Laminar-Bracket\LaminarBracket\bin\Debug\net9.0\LaminarBracket.pdb
+C:\Users\pasca\Facultate\Laminar-Bracket\LaminarBracket\obj\Debug\net9.0\LaminarBracket.dll
+C:\Users\pasca\Facultate\Laminar-Bracket\LaminarBracket\obj\Debug\net9.0\refint\LaminarBracket.dll
+C:\Users\pasca\Facultate\Laminar-Bracket\LaminarBracket\obj\Debug\net9.0\LaminarBracket.pdb
+C:\Users\pasca\Facultate\Laminar-Bracket\LaminarBracket\obj\Debug\net9.0\LaminarBracket.genruntimeconfig.cache
+C:\Users\pasca\Facultate\Laminar-Bracket\LaminarBracket\obj\Debug\net9.0\ref\LaminarBracket.dll
