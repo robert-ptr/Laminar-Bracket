@@ -173,7 +173,7 @@ datasets = [
     {
         'file': 'created_data/compression_dataset1.csv',
         'name': 'Dataset 1% percentile',
-        'params': {'eps': 0.0100, 'B': 5, 'd_max': 1, 'l_start': 1},
+        'params': {'eps': 0.0211, 'B': 5, 'd_max': 7, 'l_start': 1},
         'tolerance': 10
     }
 ]

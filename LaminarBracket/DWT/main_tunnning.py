@@ -277,7 +277,7 @@ def process(params):
     return None
 
 if __name__ == '__main__':
-    csv_file = 'created_data/compression_dataset.csv'
+    csv_file = 'created_data/compression_dataset1.csv'
 
     if not os.path.exists(csv_file):
         print(f"Error: {csv_file} not found")
@@ -301,7 +301,7 @@ if __name__ == '__main__':
 
     final_results = []
 
-    eps_values = np.linspace(0.01,0.25,10)
+    eps_values = np.linspace(0.0001,0.1,20)
     B_values = range(1,25)
     d_max_values = range(1,12)
     l_start_values = [1,2,3,4,5]
